@@ -8,7 +8,7 @@ const failing = {};
 
 export async function createScan(file) {
   await wait();
-  const name = file?.name ?? mockScan.fileName;
+  const name = file?.name ?? mockScan.originalName;
 
   // test trick: a file name containing "reject" simulates the server refusing the upload
   if (name.toLowerCase().includes("reject")) {
@@ -21,7 +21,14 @@ export async function createScan(file) {
   calls[id] = 0;
   // test trick: a file name containing "fail" simulates a scan that fails midway
   failing[id] = name.toLowerCase().includes("fail");
-  return { id, status: "queued", fileName: name };
+  return {
+    id,
+    originalName: name,
+    status: "queued",
+    filesScanned: 0,
+    counts: { critical: 0, high: 0, medium: 0, low: 0 },
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export async function getScan(id) {
