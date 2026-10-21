@@ -48,7 +48,7 @@ const createScan = async (request, response) => {
         await removePath(request.file.path)
         if (extractedDirectory) await removePath(extractedDirectory)
     }
-    response.status(201).json(scan.toJSON())
+    response.status(201).json({ success: true, data: scan.toJSON() })
 }
 
 const getScan = async (request, response) => {
@@ -60,7 +60,7 @@ const getScan = async (request, response) => {
     if (!scan) {
         throw new AppError('Scan not found', 404, 'SCAN_NOT_FOUND')
     }
-    response.status(200).json(scan.toJSON())
+    response.status(200).json({ success: true, data: scan.toJSON() })
 }
 
 module.exports = { createScan, getScan }

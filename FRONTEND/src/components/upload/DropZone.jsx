@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import Button from "../ui/Button";
 
-const MAX_SIZE = 50 * 1024 * 1024; // 50 MB in bytes
+const MAX_MB = Number(import.meta.env.VITE_MAX_UPLOAD_MB) || 50;
+const MAX_SIZE = MAX_MB * 1024 * 1024; // 50 MB in bytes
 
 function formatSize(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -13,7 +14,7 @@ function validate(file) {
     return "Please choose a .zip file. Other file types are not supported.";
   }
   if (file.size > MAX_SIZE) {
-    return `That file is ${formatSize(file.size)}. The limit is 50 MB.`;
+    return `That file is ${formatSize(file.size)}. The limit is ${MAX_MB} MB.`;
   }
   return "";
 }
@@ -78,9 +79,8 @@ export default function DropZone({ onStart, loading = false }) {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
-        className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-          dragging ? "border-accent bg-accent/10" : "border-line bg-surface"
-        }`}
+        className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${dragging ? "border-accent bg-accent/10" : "border-line bg-surface"
+          }`}
       >
         <div className="text-4xl">📦</div>
         <p className="mt-4 font-semibold">Drag and drop your .zip here</p>
@@ -90,7 +90,7 @@ export default function DropZone({ onStart, loading = false }) {
             Browse files
           </Button>
         </div>
-        <p className="mt-4 text-xs text-muted">ZIP files only, up to 50 MB</p>
+        <p className="mt-4 text-xs text-muted">ZIP files only, up to {MAX_MB} MB</p>
         <input
           ref={inputRef}
           type="file"

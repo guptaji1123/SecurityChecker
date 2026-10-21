@@ -21,7 +21,7 @@ export default function Scan() {
     try {
       const created = await createScan(file);
       setScan(created);
-      setState("scanning");
+      setState(created.status === "completed" ? "done" : "scanning");
     } catch (err) {
       setError(err.message);
       setState("error");
@@ -50,7 +50,7 @@ export default function Scan() {
           setScan(latest);
           setState("done");
         } else if (latest.status === "failed") {
-          setError(latest.error || "The scan failed. Please try again.");
+          setError("The scan failed. Please try again.");
           setState("error");
         } else {
           setScan(latest);
@@ -68,6 +68,12 @@ export default function Scan() {
       clearInterval(timer);
     };
   }, [state, scanId]);
+
+  const counts = scan?.counts ?? {};
+  const total = ["critical", "high", "medium", "low"].reduce(
+    (sum, level) => sum + (counts[level] ?? 0),
+    0
+  );
 
   return (
     <section className="mx-auto max-w-2xl py-12">
@@ -93,13 +99,13 @@ export default function Scan() {
         <Card>
           <p className="text-lg font-semibold">Scan complete</p>
           <p className="mt-1 text-sm text-muted">
-            Found {scan?.summary?.total ?? scan?.findings?.length ?? 0} issues in{" "}
-            {fileName}
+            Found {total} issues in {scan?.originalName ?? fileName}
+            {scan?.filesScanned != null && ` (${scan.filesScanned} files scanned)`}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {["critical", "high", "medium", "low"].map((level) => (
               <Badge key={level} severity={level}>
-                {level}: {scan?.summary?.[level] ?? 0}
+                {level}: {counts[level] ?? 0}
               </Badge>
             ))}
           </div>
