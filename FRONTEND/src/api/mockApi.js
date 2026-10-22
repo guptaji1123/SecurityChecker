@@ -1,4 +1,4 @@
-import { mockScan } from "./mockData";
+import { mockScan , mockFindings } from "./mockData";
 
 const wait = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -33,7 +33,12 @@ export async function createScan(file) {
 
 export async function getScan(id) {
   await wait();
-  calls[id] = (calls[id] ?? 0) + 1;
+
+  // A scan we never created in this session (for example the results page was
+  // opened directly or refreshed) is treated as already completed.
+  if (!(id in calls)) return { ...mockScan, id };
+
+  calls[id] = calls[id] + 1;
 
   if (calls[id] === 1) return { id, status: "queued" };
   if (calls[id] === 2) return { id, status: "scanning" };
@@ -41,4 +46,9 @@ export async function getScan(id) {
     return { id, status: "failed", error: "The scan failed. Please try again." };
   }
   return { ...mockScan, id, status: "completed" };
+}
+
+export async function getFindings() {
+  await wait();
+  return mockFindings;
 }

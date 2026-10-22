@@ -109,8 +109,11 @@ export default function Scan() {
               </Badge>
             ))}
           </div>
-          <div className="mt-6">
-            <Button onClick={reset}>Scan another file</Button>
+                  <div className="mt-6 flex flex-wrap gap-3">
+            <Button to={`/scan/${scan.id}`}>View full report</Button>
+            <Button variant="secondary" onClick={reset}>
+              Scan another file
+            </Button>
           </div>
         </Card>
       )}

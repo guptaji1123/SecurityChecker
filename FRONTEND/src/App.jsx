@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
 import Scan from "./pages/Scan";
+import ScanResults from "./pages/ScanResults";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/scan" element={<Scan />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/scan/:id" element={<ScanResults />} />
       </Route>
     </Routes>
   );
