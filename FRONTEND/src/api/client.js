@@ -42,5 +42,10 @@ async function realGetScan(id) {
   return request(`/api/scans/${encodeURIComponent(id)}`);
 }
 
+async function realGetFindings(id) {
+  return request(`/api/scans/${encodeURIComponent(id)}/findings`);
+}
+
 export const createScan = useMock ? mockApi.createScan : realCreateScan;
 export const getScan = useMock ? mockApi.getScan : realGetScan;
+export const getFindings = useMock ? mockApi.getFindings : realGetFindings;
