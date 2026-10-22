@@ -9,6 +9,11 @@ const findingSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    ruleId: {
+        type: String,
+        required: true,
+        index: true
+    },
     filePath: {
         type: String,
         required: true
