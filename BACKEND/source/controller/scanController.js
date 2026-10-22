@@ -3,8 +3,8 @@ const Scan = require('../model/scan.js')
 const AppError = require('../utilities/AppError.js')
 const safeExtract = require('../utilities/safeExtract.js')
 
-const ZIP_SIGNATURE = Buffer.from([0x50, 0x4b, 0x03, 0x04])
 const OBJECT_ID_PATTERN = /^[0-9a-fA-F]{24}$/
+const ZIP_SIGNATURE = Buffer.from([0x50, 0x4b, 0x03, 0x04])
 
 const hasZipSignature = async (filePath) => {
     const handle = await fs.promises.open(filePath, 'r')
