@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Card from "../components/ui/Card";
-import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import { getScan, getFindings } from "../api/client";
 import ScanSummary from "../components/scan/ScanSummary";
+import FindingsExplorer from "../components/results/FindingsExplorer";
 
-const LEVELS = ["critical", "high", "medium", "low"];
+const MAX_FINDINGS = 500; // the API never sends more than this
 
 // The key makes React start fresh (back to "loading") when the id changes.
 export default function ScanResults() {
@@ -18,7 +18,7 @@ function Report({ id }) {
   const [state, setState] = useState("loading"); // loading | error | ready
   const [scan, setScan] = useState(null);
   const [findings, setFindings] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError] = useState({ kind: "server", message: "" });
   const [attempt, setAttempt] = useState(0); // bump this to load again
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function Report({ id }) {
       })
       .catch((err) => {
         if (!active) return;
-        setError(err.message);
+        setError({ kind: err.kind ?? "server", message: err.message });
         setState("error");
       });
 
@@ -44,6 +44,11 @@ function Report({ id }) {
       active = false;
     };
   }, [id, attempt]);
+
+  function retry() {
+    setState("loading");
+    setAttempt((n) => n + 1);
+  }
 
   if (state === "loading") {
     return (
@@ -57,24 +62,38 @@ function Report({ id }) {
   }
 
   if (state === "error") {
+    // the scan id is wrong or the scan is gone: retrying cannot help
+    if (error.kind === "not_found" || error.kind === "bad_request") {
+      return (
+        <section className="mx-auto max-w-3xl py-12">
+          <Card className="text-center">
+            <p className="text-4xl" aria-hidden="true">
+              🔍
+            </p>
+            <h1 className="mt-3 text-xl font-bold">We could not find that scan</h1>
+            <p className="mt-2 text-sm text-muted">
+              The link may be wrong, or the scan may no longer exist.
+            </p>
+            <div className="mt-6">
+              <Button to="/scan">Scan a project</Button>
+            </div>
+          </Card>
+        </section>
+      );
+    }
+
+    const offline = error.kind === "network";
     return (
       <section className="mx-auto max-w-3xl py-12">
         <Card className="border-critical/60">
           <p className="text-lg font-semibold text-critical">
-            Could not load this report
+            {offline ? "Can't reach the server" : "Could not load this report"}
           </p>
           <p role="alert" className="mt-2 text-sm text-muted">
-            {error}
+            {error.message}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button
-              onClick={() => {
-                setState("loading");
-                setAttempt((n) => n + 1);
-              }}
-            >
-              Try again
-            </Button>
+            <Button onClick={retry}>Retry</Button>
             <Button to="/scan" variant="secondary">
               Back to scan
             </Button>
@@ -85,16 +104,19 @@ function Report({ id }) {
   }
 
   // ready
- const sorted = [...findings].sort(
-    (a, b) => LEVELS.indexOf(a.severity) - LEVELS.indexOf(b.severity)
+  const counts = scan?.counts ?? {};
+  const total = ["critical", "high", "medium", "low"].reduce(
+    (sum, level) => sum + (counts[level] ?? 0),
+    0
   );
+  const truncated = findings.length >= MAX_FINDINGS || total > findings.length;
 
   return (
-    <section className="mx-auto max-w-3xl py-12">
+    <section className="mx-auto max-w-5xl py-12">
       <Link to="/scan" className="text-sm text-muted hover:text-ink">
-        ← New scan
+        ← Back to scan
       </Link>
-            <div className="mt-4">
+      <div className="mt-4">
         <ScanSummary scan={scan} />
       </div>
 
@@ -103,38 +125,45 @@ function Report({ id }) {
           This scan is {scan.status}, so the list below may be incomplete.
         </p>
       )}
-      
-      {sorted.length === 0 ? (
-        <Card className="mt-8">
-          <p className="font-semibold">No exposed secrets found</p>
-          <p className="mt-1 text-sm text-muted">
-            Nothing suspicious was detected in this project.
+
+      {findings.length === 0 ? (
+        <Card className="mt-8 border-low/60 bg-low/10">
+          <p className="text-lg font-semibold">
+            <span aria-hidden="true">✓ </span>No exposed secrets found
+          </p>
+          <p className="mt-2 text-sm">
+            {scan?.filesScanned != null
+              ? `We checked ${scan.filesScanned} files and found no known secret patterns.`
+              : "We found no known secret patterns in this project."}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            This is not a guarantee. The scan only looks for known patterns, so
+            keep your keys out of code and review sensitive files yourself.
           </p>
         </Card>
       ) : (
-        <div className="mt-8 space-y-4">
-          {sorted.map((f) => (
-            <Card key={f.id}>
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge severity={f.severity} />
-                <h2 className="font-semibold">{f.type}</h2>
-              </div>
-              <p className="mt-2 text-sm text-muted break-all">
-                {f.filePath}:{f.line}
-                {f.ruleId && <span className="ml-2 text-subtle">({f.ruleId})</span>}
-              </p>
-              <pre className="mt-3 overflow-x-auto rounded-lg bg-canvas p-3 text-sm">
-                <code>{f.maskedSnippet}</code>
-              </pre>
-              <p className="mt-3 text-sm">{f.explanation}</p>
-              <p className="mt-2 text-sm text-muted">
-                <span className="font-semibold text-ink">How to fix: </span>
-                {f.fix}
-              </p>
-            </Card>
-          ))}
+        <div className="mt-8">
+          {truncated && (
+            <p
+              role="status"
+              className="mb-4 rounded-lg border border-high/60 bg-high/10 px-4 py-3 text-sm"
+            >
+              <span className="font-semibold">
+                Showing the first {findings.length} findings.
+              </span>
+              {total > findings.length &&
+                ` The scan found ${total} in total, so fix these first and scan again.`}
+            </p>
+          )}
+          <FindingsExplorer findings={findings} />
         </div>
       )}
+
+      <div className="mt-10">
+        <Button to="/scan" variant={findings.length === 0 ? "primary" : "secondary"}>
+          Scan another project
+        </Button>
+      </div>
     </section>
   );
 }
