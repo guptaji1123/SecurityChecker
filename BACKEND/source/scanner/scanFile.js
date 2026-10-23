@@ -27,11 +27,9 @@ const scanFile = async (absPath, rules = defaultRules) => {
                     continue
                 }
                 for (const match of line.matchAll(rule.pattern)) {
-                    matches.push({
-                        ruleId: rule.id,
-                        line: index + 1,
-                        matchedValue: match.groups && match.groups.secret !== undefined ? match.groups.secret : match[0],
-                    })
+                    const matchedValue = match.groups && match.groups.secret !== undefined ? match.groups.secret : match[0]
+                    if (rule.validate && !rule.validate(matchedValue, match, line)) continue
+                    matches.push({ ruleId: rule.id, line: index + 1, matchedValue })
                 }
             }
         }

@@ -21,6 +21,7 @@ const secretsOnLine = (line, rules) => {
         try {
             for (const match of line.matchAll(rule.pattern)) {
                 const value = match.groups && match.groups.secret !== undefined ? match.groups.secret : match[0]
+                if (rule.validate && !rule.validate(value, match, line)) continue
                 if (value) found.push(value)
             }
         } catch {

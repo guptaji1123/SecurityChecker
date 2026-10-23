@@ -6,5 +6,6 @@ const router = express.Router()
 
 router.post('/', upload.single('file'), scanController.createScan)
 router.get('/:id', scanController.getScan)
+router.get('/:id/findings', scanController.getFindings)
 
 module.exports = router
