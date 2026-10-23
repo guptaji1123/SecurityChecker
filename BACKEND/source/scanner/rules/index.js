@@ -1,3 +1,5 @@
+const { isSuspiciousValue } = require('../entropy.js')
+
 const rules = [
     {
         id: 'aws-access-key',
@@ -160,6 +162,16 @@ const rules = [
         keywords: ['eyJ'],
         explanation: 'A JSON Web Token is hard-coded. If it is still valid, it can be used to act as that user.',
         fix: 'Remove the token, make sure it expires or is revoked, and never commit tokens to the repository.',
+    },
+    {
+        id: 'generic-secret',
+        name: 'Possible hard-coded secret',
+        severity: 'medium',
+        pattern: /(?:secret|token|password|passwd|pwd|api[_-]?key|auth|credential)[A-Za-z0-9_.-]{0,40}["']?\s*[:=]\s*["'`](?<secret>[^"'`\s]{16,})["'`]/gi,
+        keywords: ['secret', 'token', 'password', 'passwd', 'pwd', 'api', 'auth', 'credential'],
+        validate: (value, match, line) => isSuspiciousValue(value, line),
+        explanation: 'A value assigned to a name like "secret", "token" or "password" looks random, so it may be a real secret. This is a guess and needs a human check.',
+        fix: 'If it is a real secret, rotate it and load it from an environment variable. If it is a harmless value, you can ignore this finding.',
     },
     {
         id: 'stripe-test-key',

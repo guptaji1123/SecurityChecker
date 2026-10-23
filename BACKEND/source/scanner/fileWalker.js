@@ -31,6 +31,7 @@ const SKIP_FILENAMES = new Set(['package-lock.json', 'yarn.lock', 'pnpm-lock.yam
 const SENSITIVE_FILENAMES = new Set([
     'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519',
     '.npmrc', '.pypirc', '.netrc', '.htpasswd', 'credentials',
+    '.git-credentials', 'credentials.json', 'serviceaccountkey.json', 'terraform.tfstate',
 ])
 
 const SENSITIVE_EXTENSIONS = new Set(['.pem', '.key', '.p12', '.pfx', '.jks', '.keystore'])
