@@ -60,3 +60,44 @@ export const mockFindings = [
     fix: "Remove the file from the project and add .env to .gitignore.",
   },
 ];
+
+// ---- extra cases for testing the results page ----
+
+export const CLEAN_ID = "64c1ea64c1ea64c1ea64c1ea";
+export const MANY_ID = "64a77a64a77a64a77a64a77a";
+
+// A scan with nothing found.
+export const cleanMockScan = {
+  id: CLEAN_ID,
+  originalName: "clean-project.zip",
+  status: "completed",
+  filesScanned: 58,
+  counts: { critical: 0, high: 0, medium: 0, low: 0 },
+  createdAt: "2026-10-20T10:00:00.000Z",
+};
+
+// A scan with more findings than the API will send (it stops at 500).
+export const manyMockScan = {
+  id: MANY_ID,
+  originalName: "many-findings.zip",
+  status: "completed",
+  filesScanned: 1200,
+  counts: { critical: 40, high: 150, medium: 300, low: 122 }, // 612 in total
+  createdAt: "2026-10-20T10:00:00.000Z",
+};
+
+// Only the first 500 findings come back: 40 critical, 150 high, 300 medium, 10 low.
+export const manyMockFindings = Array.from({ length: 500 }, (_, i) => {
+  const severity = i < 40 ? "critical" : i < 190 ? "high" : i < 490 ? "medium" : "low";
+  return {
+    id: `m${i + 1}`,
+    ruleId: "generic-api-key",
+    filePath: `src/generated/module-${String(i + 1).padStart(3, "0")}.js`,
+    line: (i % 120) + 1,
+    type: "Generic API Key",
+    severity,
+    maskedSnippet: 'apiKey: "********"',
+    explanation: "A random-looking value is assigned to a key named apiKey.",
+    fix: "Confirm what it is. If it is a real key, rotate it and move it to environment variables.",
+  };
+});

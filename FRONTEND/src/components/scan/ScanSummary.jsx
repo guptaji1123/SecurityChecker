@@ -1,4 +1,5 @@
 import Card from "../ui/Card";
+import SeverityChart from "./SeverityChart";
 
 const LEVELS = ["critical", "high", "medium", "low"];
 
@@ -87,19 +88,23 @@ export default function ScanSummary({ scan }) {
       </p>
 
       {/* Five cards: Total, Critical, High, Medium, Low */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <Card className="col-span-2 sm:col-span-1">
-          <p className="text-sm text-muted">Total</p>
-          <p className="mt-1 text-3xl font-bold">{total}</p>
-        </Card>
-        {LEVELS.map((level) => (
-          <Card key={level}>
-            <p className="text-sm capitalize text-muted">{level}</p>
-            <p className={`mt-1 text-3xl font-bold ${TEXT_COLOR[level]}`}>
-              {counts[level]}
-            </p>
+            {/* Five cards on the left, chart on the right */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_15rem]">
+        <div className="grid grid-cols-2 content-start gap-4">
+          <Card className="col-span-2">
+            <p className="text-sm text-muted">Total</p>
+            <p className="mt-1 text-3xl font-bold">{total}</p>
           </Card>
-        ))}
+          {LEVELS.map((level) => (
+            <Card key={level}>
+              <p className="text-sm capitalize text-muted">{level}</p>
+              <p className={`mt-1 text-3xl font-bold ${TEXT_COLOR[level]}`}>
+                {counts[level]}
+              </p>
+            </Card>
+          ))}
+        </div>
+        <SeverityChart counts={counts} />
       </div>
     </div>
   );
